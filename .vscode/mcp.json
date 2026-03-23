@@ -7,6 +7,14 @@
         "-m",
         "mcp_server.server"
       ]
+    },
+    "tmf638-service-inventory-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "-m",
+        "tmf638_mcp_server.server"
+      ]
     }
   }
 }

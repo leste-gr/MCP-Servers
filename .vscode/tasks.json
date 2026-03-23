@@ -25,6 +25,31 @@
 				"mcp_server.server"
 			],
 			"isBackground": true
+		},
+		{
+			"label": "Run TMF638 Backend",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"-m",
+				"uvicorn",
+				"tmf638_backend.app:app",
+				"--host",
+				"0.0.0.0",
+				"--port",
+				"8081"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Run TMF638 MCP Server",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"-m",
+				"tmf638_mcp_server.server"
+			],
+			"isBackground": true
 		}
 	]
 }
