@@ -8,7 +8,7 @@
 			"args": [
 				"-m",
 				"uvicorn",
-				"backend.app:app",
+				"tmf621_backend.app:app",
 				"--host",
 				"0.0.0.0",
 				"--port",
@@ -17,12 +17,12 @@
 			"isBackground": true
 		},
 		{
-			"label": "Run MCP Server",
+			"label": "Run TMF621 MCP Server",
 			"type": "shell",
 			"command": "python",
 			"args": [
 				"-m",
-				"mcp_server.server"
+				"tmf621_mcp_server.server"
 			],
 			"isBackground": true
 		},

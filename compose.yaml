@@ -5,7 +5,7 @@ services:
       dockerfile: Containerfile.backend
     container_name: tmf621-backend
     environment:
-      DB_PATH: /data/trouble_tickets.db
+      DB_PATH: /data/tickets.db
     ports:
       - "8080:8080"
     volumes:

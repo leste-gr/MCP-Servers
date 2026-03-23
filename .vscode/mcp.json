@@ -5,7 +5,7 @@
       "command": "python",
       "args": [
         "-m",
-        "mcp_server.server"
+        "tmf621_mcp_server.server"
       ]
     },
     "tmf638-service-inventory-server": {

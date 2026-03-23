@@ -5,10 +5,10 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY backend /app/backend
+COPY tmf621_backend /app/tmf621_backend
 
-ENV DB_PATH=/data/trouble_tickets.db
+ENV DB_PATH=/data/tickets.db
 
 EXPOSE 8080
 
-CMD ["python", "-m", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python", "-m", "uvicorn", "tmf621_backend.app:app", "--host", "0.0.0.0", "--port", "8080"]

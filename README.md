@@ -3,8 +3,8 @@
 This repository contains two TMF API projects, each with a Python backend and MCP server:
 
 - TMF621
-	- `backend`: TMF621-style Trouble Ticket REST API
-	- `mcp_server`: MCP server for TMF621 Trouble Ticket
+	- `tmf621_backend`: TMF621-style Trouble Ticket REST API
+	- `tmf621_mcp_server`: MCP server for TMF621 Trouble Ticket
 - TMF638
 	- `tmf638_backend`: TMF638 Service Inventory REST API
 	- `tmf638_mcp_server`: MCP server for TMF638 Service Inventory
@@ -13,7 +13,7 @@ This repository contains two TMF API projects, each with a Python backend and MC
 
 - TMF621 backend listens on `http://localhost:8080`
 - TMF621 MCP endpoint is `http://localhost:8000/mcp`
-- TMF621 backend stores trouble tickets in SQLite (`DB_PATH`, default `data/trouble_tickets.db`)
+- TMF621 backend stores trouble tickets in SQLite (`DB_PATH`, default `data/tickets.db`)
 - TMF638 backend listens on `http://localhost:8081`
 - TMF638 MCP endpoint is `http://localhost:8001/mcp`
 - TMF638 backend stores services in SQLite (`DB_PATH`, default `data/services.db`)
@@ -32,19 +32,19 @@ pip install -r requirements.txt
 Backend:
 
 ```bash
-uvicorn backend.app:app --host 0.0.0.0 --port 8080
+uvicorn tmf621_backend.app:app --host 0.0.0.0 --port 8080
 ```
 
 Optional persistent DB path override:
 
 ```bash
-DB_PATH=./data/trouble_tickets.db uvicorn backend.app:app --host 0.0.0.0 --port 8080
+DB_PATH=./data/tickets.db uvicorn tmf621_backend.app:app --host 0.0.0.0 --port 8080
 ```
 
 TMF621 MCP server (stdio transport):
 
 ```bash
-python -m mcp_server.server
+python -m tmf621_mcp_server.server
 ```
 
 By default the MCP server starts with `streamable-http` at:
