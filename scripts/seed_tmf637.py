@@ -3,270 +3,214 @@
 Usage:
     python scripts/seed_tmf637.py [--base-url http://localhost:8082]
 """
+
 import argparse
 import json
-import random
 import urllib.request
-from datetime import datetime, timedelta, UTC
 
 BASE_URL = "http://localhost:8082"
 ENDPOINT = "/tmf-api/productInventory/v5/product"
 
-STATUSES = ["pending", "ordered", "provisioned", "active", "suspended", "inactive", "terminated"]
+
+def related_customer(customer_id: str, customer_name: str) -> dict:
+    """Create TMF637-compliant relatedParty item for a customer."""
+    return {
+        "role": "Customer",
+        "partyOrPartyRole": {
+            "id": customer_id,
+            "href": f"https://host:port/partyManagement/v5/individual/{customer_id}",
+            "name": customer_name,
+            "@type": "PartyRoleRef",
+            "@referredType": "Customer",
+        },
+        "@type": "RelatedPartyOrPartyRole",
+    }
+
 
 PRODUCTS = [
-    # --- Mobile Services ---
     {
-        "name": "Postpaid Voice Plan – 1000 Minutes",
-        "description": "Unlimited national calling + 1000 international minutes with unlimited SMS to 150+ countries.",
+        "name": "FTTH Residential 300M - Athens Center",
+        "description": "Fixed-line FTTH 300 Mbps with home voice over SIP.",
         "status": "active",
         "productOffering": {
-            "id": "PO-VOICE-001",
-            "name": "1000 Min International Plan"
+            "id": "PO-FTTH-300-RES",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-FTTH-300-RES",
+            "name": "FTTH 300M Residential",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-10001", "Elena Papadopoulou")],
     },
     {
-        "name": "5G Data Plan – 100GB",
-        "description": "Ultra-fast 5G mobile broadband with 100GB monthly allowance, priority network access.",
+        "name": "FTTH Residential 500M - Thessaloniki East",
+        "description": "Fixed-line FTTH 500 Mbps with dynamic IPv4 and voice bundle.",
         "status": "active",
         "productOffering": {
-            "id": "PO-DATA-5G-001",
-            "name": "5G 100GB Premium"
+            "id": "PO-FTTH-500-RES",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-FTTH-500-RES",
+            "name": "FTTH 500M Residential",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-10002", "Ioannis Kouris")],
     },
     {
-        "name": "Business Mobile Bundle for Teams",
-        "description": "10 lines with shared 500GB data pool, enterprise management portal, dedicated support.",
+        "name": "FTTH Residential 1G - Patras",
+        "description": "Fixed-line gigabit FTTH with premium Wi-Fi router and voice service.",
         "status": "provisioned",
         "productOffering": {
-            "id": "PO-BUNDLE-BIZ-001",
-            "name": "Enterprise 10-Line Bundle"
+            "id": "PO-FTTH-1G-RES",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-FTTH-1G-RES",
+            "name": "FTTH 1G Residential",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-10003", "Maria Nikolaou")],
     },
     {
-        "name": "IoT Connectivity – Low Bandwidth",
-        "description": "M2M/IoT sim cards with optimized SMS/data for sensors, GPS trackers, vending machines.",
+        "name": "VDSL Residential 100M - Larissa",
+        "description": "Fixed-line VDSL over copper with VoIP voice and managed CPE.",
         "status": "active",
         "productOffering": {
-            "id": "PO-IOT-LB-001",
-            "name": "IoT Low-BW SIM"
+            "id": "PO-VDSL-100-RES",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-VDSL-100-RES",
+            "name": "VDSL 100M Residential",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-10004", "Giorgos Manos")],
     },
     {
-        "name": "Roaming Plus – Global Coverage",
-        "description": "Add-on: Worldwide roaming with local rates in 190+ countries, auto-detection.",
+        "name": "VDSL Residential 50M - Volos",
+        "description": "Fixed-line VDSL 50 Mbps package with SIP voice migration.",
         "status": "active",
         "productOffering": {
-            "id": "PO-ROAM-001",
-            "name": "Global Roaming Add-On"
+            "id": "PO-VDSL-50-RES",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-VDSL-50-RES",
+            "name": "VDSL 50M Residential",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-10005", "Sofia Arvaniti")],
     },
-
-    # --- Fixed/Broadband Services ---
     {
-        "name": "Fiber Broadband 500 Mbps",
-        "description": "Home broadband: FTTH 500 Mbps download / 100 Mbps upload, no cap, WiFi 6 router included.",
+        "name": "Business Ethernet 1G - Retail Chain HQ",
+        "description": "Fixed-line dedicated Ethernet with 99.95% SLA.",
         "status": "active",
         "productOffering": {
-            "id": "PO-FIBER-500-001",
-            "name": "Home Fiber 500M"
+            "id": "PO-ETH-1G-BIZ",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-ETH-1G-BIZ",
+            "name": "Business Ethernet 1G",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-20001", "RetailOne S.A.")],
     },
     {
-        "name": "Business Ethernet – 10 Gbps",
-        "description": "Dedicated business-grade Ethernet circuit, SLA 99.99%, 24/7 technical support.",
+        "name": "Business Ethernet 10G - Data Center Interconnect",
+        "description": "Fixed-line 10G DCI service between metro PoPs.",
         "status": "provisioned",
         "productOffering": {
-            "id": "PO-ETH-10G-001",
-            "name": "Business 10G Ethernet"
+            "id": "PO-ETH-10G-BIZ",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-ETH-10G-BIZ",
+            "name": "Business Ethernet 10G",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-20002", "CloudAxis Ltd.")],
     },
     {
-        "name": "MPLS VPN – Site-to-Site",
-        "description": "Managed VPN connecting 5 remote locations via MPLS backbone, QoS prioritization.",
+        "name": "MPLS L3VPN 5 Sites - Banking Branches",
+        "description": "Fixed-line MPLS VPN interconnecting 5 branch sites.",
         "status": "active",
         "productOffering": {
-            "id": "PO-MPLS-5SITE-001",
-            "name": "MPLS VPN 5-Site"
+            "id": "PO-MPLS-5SITE-BIZ",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-MPLS-5SITE-BIZ",
+            "name": "MPLS L3VPN 5 Sites",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-20003", "Hellenic Trust Bank")],
     },
     {
-        "name": "DSL Internet Bundle + Phone Line",
-        "description": "Legacy DSL 24 Mbps + analog phone service + caller ID/call waiting.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-DSL-BUNDLE-001",
-            "name": "DSL + Phone Bundle"
-        },
-    },
-
-    # --- TV/Media Services ---
-    {
-        "name": "Premium TV – 400+ Channels",
-        "description": "Full HD/4K channels: sports, movies, news, entertainment. Includes DVR box, 2 concurrent streams.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-TV-PREM-001",
-            "name": "Premium TV 400ch"
-        },
-    },
-    {
-        "name": "Streaming Video on Demand",
-        "description": "Movie/series streaming: 10k+ titles in HD. Compatible with smart TV, tablets, phones.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-VOD-001",
-            "name": "Streaming VOD Service"
-        },
-    },
-    {
-        "name": "IPTV Basic – 150 Channels",
-        "description": "IP-based TV service: 150 standard channels, HD quality, DVR 40 hours.",
-        "status": "suspended",
-        "productOffering": {
-            "id": "PO-IPTV-BASIC-001",
-            "name": "IPTV Basic 150ch"
-        },
-    },
-
-    # --- Cloud/Enterprise ---
-    {
-        "name": "Cloud Backup – 1TB",
-        "description": "Secure cloud backup service: automatic daily backup, 1TB storage, 5-year retention.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-BACKUP-1TB-001",
-            "name": "Cloud Backup 1TB"
-        },
-    },
-    {
-        "name": "Managed Firewall – Standard",
-        "description": "Managed security: next-gen firewall, IPS/IDS, threat intel, managed updates.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-FIREWALL-STD-001",
-            "name": "Managed Firewall Std"
-        },
-    },
-    {
-        "name": "Private Cloud Hosting – 16 vCPU",
-        "description": "Dedicated VM hosting: 16 vCPU, 64GB RAM, 500GB SSD, daily backup, monitoring.",
-        "status": "provisioned",
-        "productOffering": {
-            "id": "PO-CLOUD-16VC-001",
-            "name": "Private Cloud 16vCPU"
-        },
-    },
-    {
-        "name": "Email Security Gateway",
-        "description": "Email protection: antispam, antivirus, DLP, encryption, archive 7-year retention.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-EMAIL-SEC-001",
-            "name": "Email Security Gateway"
-        },
-    },
-
-    # --- Telephony ---
-    {
-        "name": "Hosted PBX – 50 Extensions",
-        "description": "Cloud-based phone system: 50 extensions, IVR, call recording, mobile app, voicemail.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-PBX-50EXT-001",
-            "name": "Hosted PBX 50ext"
-        },
-    },
-    {
-        "name": "Conference Bridge – Unlimited",
-        "description": "Audio/video conference: unlimited participants, recording, screen share, calendar integration.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-CONF-UNLIM-001",
-            "name": "Conference Unlimited"
-        },
-    },
-    {
-        "name": "International Trunk – E1 Primary",
-        "description": "Primary E1 trunk for international calling: 30 channels, routing to 50+ countries.",
+        "name": "MPLS L3VPN 12 Sites - Logistics Network",
+        "description": "Fixed-line MPLS with 12 locations and centralized breakout.",
         "status": "ordered",
         "productOffering": {
-            "id": "PO-TRUNK-E1-001",
-            "name": "E1 International Trunk"
+            "id": "PO-MPLS-12SITE-BIZ",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-MPLS-12SITE-BIZ",
+            "name": "MPLS L3VPN 12 Sites",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-20004", "Aegean Logistics S.A.")],
     },
-
-    # --- Additional Services ---
     {
-        "name": "Static IP Address Block – /28",
-        "description": "Fixed IPv4 block: 14 public IPs, suitable for small business web/mail hosting.",
+        "name": "SIP Trunk 30 Channels - Hotel Group",
+        "description": "Fixed-line enterprise SIP trunk for PBX with 30 channels.",
         "status": "active",
         "productOffering": {
-            "id": "PO-IP-BLOCK-28-001",
-            "name": "IPv4 Block /28"
+            "id": "PO-SIPTRUNK-30",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-SIPTRUNK-30",
+            "name": "SIP Trunk 30 Channels",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-20005", "Mediterranean Hotels Group")],
     },
     {
-        "name": "Network Monitoring & Analytics",
-        "description": "Real-time network monitoring: bandwidth usage, anomaly detection, reports & alerts.",
+        "name": "P2P Leased Line 100M - Municipal Services",
+        "description": "Fixed-line point-to-point leased line for municipal backhaul.",
         "status": "active",
         "productOffering": {
-            "id": "PO-NET-MON-001",
-            "name": "Network Monitoring"
+            "id": "PO-LL-100M",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-LL-100M",
+            "name": "Leased Line 100M",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
+        "relatedParty": [related_customer("45hj-20006", "City of Heraklion")],
     },
     {
-        "name": "Professional Installation Service",
-        "description": "On-site installation & configuration for broadband/fiber connections & equipment.",
-        "status": "pending",
+        "name": "Wholesale Local Loop - ISP Partner",
+        "description": "Fixed-line wholesale local loop access for partner ISP resale services.",
+        "status": "suspended",
         "productOffering": {
-            "id": "PO-INSTALL-PROF-001",
-            "name": "Professional Installation"
+            "id": "PO-WLL-WHOLESALE",
+            "href": "https://host:port/productCatalogManagement/v5/productOffering/PO-WLL-WHOLESALE",
+            "name": "Wholesale Local Loop",
+            "@type": "ProductOfferingRef",
+            "@referredType": "ProductOffering",
         },
-    },
-    {
-        "name": "Extended Hardware Warranty – 3 Years",
-        "description": "Equipment warranty extension: covers repairs, replacements, accidental damage.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-WARRANTY-3YR-001",
-            "name": "Hardware Warranty 3yr"
-        },
-    },
-    {
-        "name": "24/7 Premium Support Package",
-        "description": "Priority support: phone/email/chat, <1 hour response time, dedicated account manager.",
-        "status": "active",
-        "productOffering": {
-            "id": "PO-SUPPORT-PREM-001",
-            "name": "Premium 24/7 Support"
-        },
+        "relatedParty": [related_customer("45hj-30001", "OpenNet ISP")],
     },
 ]
 
 
-def post_product(product: dict):
-    """POST a single product."""
+def post_product(base_url: str, product: dict) -> str | None:
+    """POST a single product and return the created product id."""
     payload = {
         "@type": "Product",
         **product,
     }
+
     req = urllib.request.Request(
-        f"{BASE_URL}{ENDPOINT}",
+        f"{base_url}{ENDPOINT}",
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST",
     )
+
     try:
-        with urllib.request.urlopen(req, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=8) as response:
             result = json.loads(response.read().decode("utf-8"))
             return result.get("id")
-    except Exception as e:
-        print(f"  ✗ Error creating product: {e}")
+    except Exception as error:
+        print(f"  ✗ Error creating product: {error}")
         return None
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Seed TMF637 Product Inventory.")
     parser.add_argument(
         "--base-url",
@@ -275,19 +219,18 @@ def main():
     )
     args = parser.parse_args()
 
-    global BASE_URL
-    BASE_URL = args.base_url
+    base_url = args.base_url.rstrip("/")
 
-    print(f"Seeding {len(PRODUCTS)} products to {BASE_URL}{ENDPOINT}...\n")
+    print(f"Seeding {len(PRODUCTS)} fixed-line products to {base_url}{ENDPOINT}...\n")
 
-    created_ids = []
-    for i, product in enumerate(PRODUCTS, 1):
-        product_id = post_product(product)
+    created_ids: list[str] = []
+    for index, product in enumerate(PRODUCTS, 1):
+        product_id = post_product(base_url, product)
         if product_id:
             created_ids.append(product_id)
-            print(f"{i:3d}. ✓ {product['name'][:40]:40} → {product_id}")
+            print(f"{index:3d}. ✓ {product['name'][:52]:52} → {product_id}")
         else:
-            print(f"{i:3d}. ✗ {product['name'][:40]:40}")
+            print(f"{index:3d}. ✗ {product['name'][:52]:52}")
 
     print(f"\n✓ Created {len(created_ids)} products successfully.")
 

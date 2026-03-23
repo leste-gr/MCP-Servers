@@ -5,8 +5,8 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Path, Query, Response
 
-from backend.models import TroubleTicket, TroubleTicketCreate, TroubleTicketPatch
-from backend.storage import create_ticket, delete_ticket, get_ticket, init_db, list_tickets, update_ticket
+from tmf621_backend.models import TroubleTicket, TroubleTicketCreate, TroubleTicketPatch
+from tmf621_backend.storage import create_ticket, delete_ticket, get_ticket, init_db, list_tickets, update_ticket
 
 BASE_PATH = "/tmf-api/troubleTicket/v5"
 

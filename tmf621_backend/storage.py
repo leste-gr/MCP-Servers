@@ -5,7 +5,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-from backend.models import TroubleTicket
+from tmf621_backend.models import TroubleTicket
 
 DB_PATH = os.getenv("DB_PATH", "data/trouble_tickets.db")
 

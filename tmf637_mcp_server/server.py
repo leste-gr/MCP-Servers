@@ -1,18 +1,32 @@
 """TMF637 Product Inventory Management MCP server."""
+from __future__ import annotations
+
 import os
-from typing import Any
+from typing import Any, Literal
+
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-# Configuration
-MCP_HOST = os.getenv("MCP_HOST", "127.0.0.1")
-MCP_PORT = int(os.getenv("MCP_PORT", 8002))
-MCP_PATH = os.getenv("MCP_PATH", "/mcp")
 MCP_TRANSPORT = os.getenv("MCP_TRANSPORT", "streamable-http")
-TMF637_BASE_URL = os.getenv("TMF637_BASE_URL", "http://localhost:8082/tmf-api/productInventory/v5")
+MCP_HOST = os.getenv("MCP_HOST", "0.0.0.0")
+MCP_PORT = int(os.getenv("MCP_PORT", "8002"))
+MCP_PATH = os.getenv("MCP_PATH", "/mcp")
 
-# Initialize MCP server
-server = FastMCP("tmf637-product-inventory-server", transport=MCP_TRANSPORT)
+TMF637_BASE_URL = os.getenv(
+    "TMF637_BASE_URL",
+    "http://tmf637-backend:8082/tmf-api/productInventory/v5",
+).rstrip("/")
+
+mcp = FastMCP(
+    "tmf637-mcp-server",
+    host=MCP_HOST,
+    port=MCP_PORT,
+    streamable_http_path=MCP_PATH,
+)
+
+
+def _endpoint(path: str) -> str:
+    return f"{TMF637_BASE_URL}{path}"
 
 
 def _fields_str(fields: list[str] | str | None) -> str | None:
@@ -32,180 +46,111 @@ def _to_int(v: Any) -> int | None:
         return None
 
 
-@server.tool()
-def health_check() -> dict:
-    """Check health of TMF637 backend."""
-    try:
-        response = httpx.get(f"{TMF637_BASE_URL.rsplit('/', 1)[0]}/health", timeout=5)
-        return {"status": "healthy" if response.status_code == 200 else "unhealthy"}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+@mcp.tool()
+def health_check() -> dict[str, str]:
+    return {
+        "status": "ok",
+        "server": "tmf637-mcp-server",
+        "tmf637BaseUrl": TMF637_BASE_URL,
+    }
 
 
-@server.tool()
+@mcp.tool()
 def list_products(
     fields: list[str] | str | None = None,
     offset: Any = None,
     limit: Any = None,
-) -> dict:
-    """List all products from inventory."""
-    params = {}
-    
-    fields_str = _fields_str(fields)
-    if fields_str:
-        params["fields"] = fields_str
-    
-    offset_int = _to_int(offset)
-    if offset_int is not None:
-        params["offset"] = offset_int
-    
-    limit_int = _to_int(limit)
-    if limit_int is not None:
-        params["limit"] = limit_int
+) -> list[dict[str, Any]]:
+    params = {"fields": _fields_str(fields), "offset": _to_int(offset), "limit": _to_int(limit)}
+    params = {k: v for k, v in params.items() if v is not None}
 
-    try:
-        response = httpx.get(f"{TMF637_BASE_URL}/product", params=params, timeout=10)
+    with httpx.Client(timeout=30.0) as client:
+        response = client.get(_endpoint("/product"), params=params)
         response.raise_for_status()
-        return {
-            "products": response.json(),
-            "total_count": response.headers.get("X-Total-Count", "0"),
-            "result_count": response.headers.get("X-Result-Count", "0"),
-        }
-    except Exception as e:
-        return {"error": str(e), "products": []}
+        return response.json()
 
 
-@server.tool()
+@mcp.tool()
 def get_product(
     product_id: str,
     fields: list[str] | str | None = None,
-) -> dict:
-    """Get a specific product by ID."""
-    params = {}
-    fields_str = _fields_str(fields)
-    if fields_str:
-        params["fields"] = fields_str
-
-    try:
-        response = httpx.get(f"{TMF637_BASE_URL}/product/{product_id}", params=params, timeout=10)
+) -> dict[str, Any]:
+    f = _fields_str(fields)
+    params = {"fields": f} if f else None
+    with httpx.Client(timeout=30.0) as client:
+        response = client.get(_endpoint(f"/product/{product_id}"), params=params)
         response.raise_for_status()
         return response.json()
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
-            return {"error": "Product not found"}
-        return {"error": str(e)}
-    except Exception as e:
-        return {"error": str(e)}
 
 
-@server.tool()
+@mcp.tool()
 def create_product(
-    name: str,
+    name: str | None = None,
     description: str | None = None,
     product_offering: dict | None = None,
     account: dict | None = None,
-    status: str | None = None,
-    fields: list[str] | str | None = None,
-) -> dict:
-    """Create a new product in inventory."""
+    status: Literal["pending", "ordered", "provisioned", "active", "suspended", "inactive", "terminated"] | None = None,
+    at_type: str = "Product",
+) -> dict[str, Any]:
     payload = {
-        "@type": "Product",
+        "@type": at_type,
         "name": name,
+        "description": description,
+        "productOffering": product_offering,
+        "account": account,
+        "status": status,
     }
-    
-    if description:
-        payload["description"] = description
-    if product_offering:
-        payload["productOffering"] = product_offering
-    if account:
-        payload["account"] = account
-    if status:
-        payload["status"] = status
+    payload = {k: v for k, v in payload.items() if v is not None}
 
-    params = {}
-    fields_str = _fields_str(fields)
-    if fields_str:
-        params["fields"] = fields_str
-
-    try:
-        response = httpx.post(
-            f"{TMF637_BASE_URL}/product",
-            json=payload,
-            params=params,
-            timeout=10,
-        )
+    with httpx.Client(timeout=30.0) as client:
+        response = client.post(_endpoint("/product"), json=payload)
         response.raise_for_status()
         return response.json()
-    except Exception as e:
-        return {"error": str(e)}
 
 
-@server.tool()
+@mcp.tool()
 def patch_product(
     product_id: str,
+    at_type: str | None = None,
     name: str | None = None,
     description: str | None = None,
-    status: str | None = None,
+    status: Literal["pending", "ordered", "provisioned", "active", "suspended", "inactive", "terminated"] | None = None,
     product_offering: dict | None = None,
     fields: list[str] | str | None = None,
-) -> dict:
-    """Update a product partially."""
+) -> dict[str, Any]:
     payload = {}
-    
-    if name:
+    if at_type:
+        payload["@type"] = at_type
+    if name is not None:
         payload["name"] = name
-    if description:
+    if description is not None:
         payload["description"] = description
-    if status:
+    if status is not None:
         payload["status"] = status
-    if product_offering:
+    if product_offering is not None:
         payload["productOffering"] = product_offering
 
-    params = {}
-    fields_str = _fields_str(fields)
-    if fields_str:
-        params["fields"] = fields_str
+    f = _fields_str(fields)
+    params = {"fields": f} if f else None
 
-    try:
-        response = httpx.patch(
-            f"{TMF637_BASE_URL}/product/{product_id}",
-            json=payload,
-            params=params,
-            timeout=10,
-        )
+    with httpx.Client(timeout=30.0) as client:
+        response = client.patch(_endpoint(f"/product/{product_id}"), json=payload, params=params)
         response.raise_for_status()
         return response.json()
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
-            return {"error": "Product not found"}
-        return {"error": str(e)}
-    except Exception as e:
-        return {"error": str(e)}
 
 
-@server.tool()
-def delete_product(product_id: str) -> dict:
-    """Delete a product from inventory."""
-    try:
-        response = httpx.delete(f"{TMF637_BASE_URL}/product/{product_id}", timeout=10)
+@mcp.tool()
+def delete_product(product_id: str) -> dict[str, Any]:
+    with httpx.Client(timeout=30.0) as client:
+        response = client.delete(_endpoint(f"/product/{product_id}"))
         response.raise_for_status()
-        return {"status": "deleted"}
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
-            return {"error": "Product not found"}
-        return {"error": str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+    return {"status": "deleted", "productId": product_id}
 
 
 if __name__ == "__main__":
-    if MCP_TRANSPORT == "streamable-http":
-        import uvicorn
-        uvicorn.run(
-            "tmf637_mcp_server.server:app",
-            host=MCP_HOST,
-            port=MCP_PORT,
-            log_level="info",
-        )
+    if MCP_TRANSPORT == "stdio":
+        mcp.run(transport="stdio")
+    elif MCP_TRANSPORT == "sse":
+        mcp.run(transport="sse", mount_path=MCP_PATH)
     else:
-        server.run()
+        mcp.run(transport="streamable-http")
