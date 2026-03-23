@@ -49,14 +49,11 @@ def list_trouble_tickets(
 def create_trouble_ticket(payload: TroubleTicketCreate) -> TroubleTicket:
     now = datetime.now(UTC)
     ticket_id = str(uuid4())
+    payload_data = payload.model_dump(by_alias=True, exclude_none=True)
     ticket = TroubleTicket(
         id=ticket_id,
         href=_ticket_href(ticket_id),
-        **{"@type": payload.at_type or "TroubleTicket"},
-        externalId=payload.external_id,
-        name=payload.name,
-        description=payload.description,
-        severity=payload.severity,
+        **payload_data,
         creationDate=now,
         lastUpdate=now,
     )
