@@ -1,0 +1,33 @@
+services:
+  tmf637-backend:
+    build:
+      context: .
+      dockerfile: Containerfile.backend.tmf637
+    container_name: tmf637-backend
+    environment:
+      DB_PATH: /data/products.db
+    ports:
+      - "8082:8082"
+    volumes:
+      - tmf637-data:/data
+
+  tmf637-mcp-server:
+    build:
+      context: .
+      dockerfile: Containerfile.mcp.tmf637
+    container_name: tmf637-mcp-server
+    depends_on:
+      - tmf637-backend
+    environment:
+      TMF637_BASE_URL: http://tmf637-backend:8082/tmf-api/productInventory/v5
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8002
+      MCP_PATH: /mcp
+    ports:
+      - "8002:8002"
+    stdin_open: true
+    tty: true
+
+volumes:
+  tmf637-data:

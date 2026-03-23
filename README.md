@@ -1,6 +1,6 @@
-# MCP Server + TMF621 Backend (Python)
+# MCP Server + TMF APIs Backend (Python)
 
-This repository contains two TMF API projects, each with a Python backend and MCP server:
+This repository contains three TMF API projects, each with a Python backend and MCP server:
 
 - TMF621
 	- `tmf621_backend`: TMF621-style Trouble Ticket REST API
@@ -8,6 +8,9 @@ This repository contains two TMF API projects, each with a Python backend and MC
 - TMF638
 	- `tmf638_backend`: TMF638 Service Inventory REST API
 	- `tmf638_mcp_server`: MCP server for TMF638 Service Inventory
+- TMF637
+	- `tmf637_backend`: TMF637 Product Inventory REST API
+	- `tmf637_mcp_server`: MCP server for TMF637 Product Inventory
 
 ## Architecture
 
@@ -17,6 +20,9 @@ This repository contains two TMF API projects, each with a Python backend and MC
 - TMF638 backend listens on `http://localhost:8081`
 - TMF638 MCP endpoint is `http://localhost:8001/mcp`
 - TMF638 backend stores services in SQLite (`DB_PATH`, default `data/services.db`)
+- TMF637 backend listens on `http://localhost:8082`
+- TMF637 MCP endpoint is `http://localhost:8002/mcp`
+- TMF637 backend stores products in SQLite (`DB_PATH`, default `data/products.db`)
 
 ## Local Python setup
 
@@ -67,6 +73,22 @@ TMF638 streamable HTTP endpoint:
 
 - `http://localhost:8001/mcp`
 
+TMF637 backend:
+
+```bash
+uvicorn tmf637_backend.app:app --host 0.0.0.0 --port 8082
+```
+
+TMF637 MCP server:
+
+```bash
+python -m tmf637_mcp_server.server
+```
+
+TMF637 streamable HTTP endpoint:
+
+- `http://localhost:8002/mcp`
+
 ## Podman deployment
 
 Build and run both containers:
@@ -81,6 +103,12 @@ Build and run TMF638 containers:
 podman compose -f compose.tmf638.yaml up --build
 ```
 
+Build and run TMF637 containers:
+
+```bash
+podman compose -f compose.tmf637.yaml up --build
+```
+
 Services in compose:
 
 - `tmf621-backend` (FastAPI backend)
@@ -91,15 +119,18 @@ Services in `compose.tmf638.yaml`:
 - `tmf638-backend` (FastAPI backend)
 - `tmf638-mcp-server` (Python MCP server)
 
-The backend DB is persisted in the `tmf621-data` volume at `/data/trouble_tickets.db`.
+Services in `compose.tmf637.yaml`:
 
-Langflow MCP endpoint:
+- `tmf637-backend` (FastAPI backend)
+- `tmf637-mcp-server` (Python MCP server)
 
-- `http://localhost:8000/mcp`
+The backend DB is persisted in the `tmf621-data` volume at `/data/tickets.db`.
 
-TMF638 Langflow MCP endpoint:
+Langflow MCP endpoints:
 
-- `http://localhost:8001/mcp`
+- TMF621: `http://localhost:8000/mcp`
+- TMF638: `http://localhost:8001/mcp`
+- TMF637: `http://localhost:8002/mcp`
 
 ## TMF621 endpoints (backend)
 
@@ -144,3 +175,25 @@ Supported query parameters from the spec subset:
 - `create_service`
 - `patch_service`
 - `delete_service`
+
+## TMF637 endpoints (backend)
+
+- `GET /tmf-api/productInventory/v5/product`
+- `POST /tmf-api/productInventory/v5/product`
+- `GET /tmf-api/productInventory/v5/product/{id}`
+- `PATCH /tmf-api/productInventory/v5/product/{id}`
+- `DELETE /tmf-api/productInventory/v5/product/{id}`
+
+Supported query parameters from the spec subset:
+
+- `fields` on list/get/patch
+- `offset`, `limit` on list
+
+## TMF637 MCP tools
+
+- `health_check`
+- `list_products`
+- `get_product`
+- `create_product`
+- `patch_product`
+- `delete_product`

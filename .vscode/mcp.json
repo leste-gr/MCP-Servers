@@ -15,6 +15,12 @@
         "-m",
         "tmf638_mcp_server.server"
       ]
+    },
+    "tmf637-product-inventory-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "-m",
+        "tmf637_mcp_server.server"
+      ]
     }
-  }
-}

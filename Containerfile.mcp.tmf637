@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+COPY tmf637_mcp_server /app/tmf637_mcp_server
+
+ENV TMF637_BASE_URL=http://tmf637-backend:8082/tmf-api/productInventory/v5
+ENV MCP_TRANSPORT=streamable-http
+ENV MCP_HOST=0.0.0.0
+ENV MCP_PORT=8002
+ENV MCP_PATH=/mcp
+
+CMD ["python", "-m", "tmf637_mcp_server.server"]
