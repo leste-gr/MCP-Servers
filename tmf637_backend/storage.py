@@ -4,8 +4,16 @@ import os
 import sqlite3
 from datetime import datetime, UTC
 from pathlib import Path
+from typing import Optional
 
 DB_PATH = os.getenv("DB_PATH", "data/products.db")
+
+
+def _materialize_product(product_id: str, payload: dict) -> dict:
+    result = dict(payload)
+    result.setdefault("id", product_id)
+    result.setdefault("href", f"/tmf-api/productInventory/v5/product/{product_id}")
+    return result
 
 
 def init_db():
@@ -29,6 +37,7 @@ def init_db():
 def create_product(product_id: str, payload: dict) -> dict:
     """Create a new product in the database."""
     now = datetime.now(UTC).isoformat()
+    payload = _materialize_product(product_id, payload)
     payload["creationDate"] = now
     payload["lastUpdate"] = now
 
@@ -46,13 +55,13 @@ def get_product(product_id: str, fields: Optional[list[str]] = None) -> dict | N
     """Retrieve a product by ID, optionally filtering fields."""
     with sqlite3.connect(DB_PATH) as connection:
         row = connection.execute(
-            "SELECT payload FROM products WHERE id = ?", (product_id,)
+            "SELECT id, payload FROM products WHERE id = ?", (product_id,)
         ).fetchone()
 
     if not row:
         return None
 
-    payload = json.loads(row[0])
+    payload = _materialize_product(row[0], json.loads(row[1]))
     if fields:
         payload = {k: v for k, v in payload.items() if k in fields}
 
@@ -67,13 +76,13 @@ def list_products(offset: int = 0, limit: int = 100, fields: Optional[list[str]]
 
         # Get paginated results
         rows = connection.execute(
-            "SELECT payload FROM products ORDER BY id LIMIT ? OFFSET ?",
+            "SELECT id, payload FROM products ORDER BY id LIMIT ? OFFSET ?",
             (limit, offset),
         ).fetchall()
 
     products = []
     for row in rows:
-        payload = json.loads(row[0])
+        payload = _materialize_product(row[0], json.loads(row[1]))
         if fields:
             payload = {k: v for k, v in payload.items() if k in fields}
         products.append(payload)
@@ -109,6 +118,3 @@ def delete_product(product_id: str) -> bool:
         )
         connection.commit()
         return cursor.rowcount > 0
-
-
-from typing import Optional
