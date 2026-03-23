@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+COPY mcp_server /app/mcp_server
+
+ENV TMF621_BASE_URL=http://tmf621-backend:8080/tmf-api/troubleTicket/v5
+ENV MCP_TRANSPORT=streamable-http
+ENV MCP_HOST=0.0.0.0
+ENV MCP_PORT=8000
+ENV MCP_PATH=/mcp
+
+CMD ["python", "-m", "mcp_server.server"]

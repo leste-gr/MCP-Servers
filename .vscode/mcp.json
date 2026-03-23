@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "tmf621-trouble-ticket-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server.server"
+      ]
+    }
+  }
+}

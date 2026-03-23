@@ -1,0 +1,33 @@
+services:
+  tmf621-backend:
+    build:
+      context: .
+      dockerfile: Containerfile.backend
+    container_name: tmf621-backend
+    environment:
+      DB_PATH: /data/trouble_tickets.db
+    ports:
+      - "8080:8080"
+    volumes:
+      - tmf621-data:/data
+
+  tmf621-mcp-server:
+    build:
+      context: .
+      dockerfile: Containerfile.mcp
+    container_name: tmf621-mcp-server
+    depends_on:
+      - tmf621-backend
+    environment:
+      TMF621_BASE_URL: http://tmf621-backend:8080/tmf-api/troubleTicket/v5
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+      MCP_PATH: /mcp
+    ports:
+      - "8000:8000"
+    stdin_open: true
+    tty: true
+
+volumes:
+  tmf621-data:
