@@ -1,6 +1,6 @@
 # MCP Server + TMF APIs Backend (Python)
 
-This repository contains three TMF API projects, each with a Python backend and MCP server:
+This repository contains three TMF API projects, each with a Python backend and MCP server, plus two standalone mock support MCP servers:
 
 - TMF621
 	- `tmf621_backend`: TMF621-style Trouble Ticket REST API
@@ -11,6 +11,10 @@ This repository contains three TMF API projects, each with a Python backend and 
 - TMF637
 	- `tmf637_backend`: TMF637 Product Inventory REST API
 	- `tmf637_mcp_server`: MCP server for TMF637 Product Inventory
+- WiFi Calling Support
+	- `wifi_calling_mcp_server`: standalone MCP server with mock Siebel and Axiros-style support tools
+- Troubleshooting Support
+	- `troubleshooting_mcp_server`: standalone MCP server with mock troubleshooting tools (AAA, Axiros, NTS, WCRM, OTE/Nova, Siebel, TOA)
 
 ## Architecture
 
@@ -23,6 +27,10 @@ This repository contains three TMF API projects, each with a Python backend and 
 - TMF637 backend listens on `http://localhost:8082`
 - TMF637 MCP endpoint is `http://localhost:8002/mcp`
 - TMF637 backend stores products in SQLite (`DB_PATH`, default `data/products.db`)
+- WiFi Calling MCP endpoint is `http://localhost:8011/mcp`
+- WiFi Calling server keeps demo customers, routers, and tickets in memory
+- Troubleshooting MCP endpoint is `http://localhost:8012/mcp`
+- Troubleshooting server keeps demo customers, tickets, and appointments in memory
 
 ## Local Python setup
 
@@ -89,6 +97,26 @@ TMF637 streamable HTTP endpoint:
 
 - `http://localhost:8002/mcp`
 
+WiFi Calling MCP server:
+
+```bash
+python -m wifi_calling_mcp_server.server
+```
+
+WiFi Calling streamable HTTP endpoint:
+
+- `http://localhost:8011/mcp`
+
+Troubleshooting MCP server:
+
+```bash
+python -m troubleshooting_mcp_server.server
+```
+
+Troubleshooting streamable HTTP endpoint:
+
+- `http://localhost:8012/mcp`
+
 ## Podman deployment
 
 Build and run both containers:
@@ -109,10 +137,18 @@ Build and run TMF637 containers:
 podman compose -f compose.tmf637.yaml up --build
 ```
 
+Build and run the WiFi Calling MCP container:
+
+```bash
+podman compose -f compose.wifi_calling.yaml up --build
+```
+
 Services in compose:
 
 - `tmf621-backend` (FastAPI backend)
 - `tmf621-mcp-server` (Python MCP server)
+- `wifi-calling-mcp-server` (Python MCP server)
+- `troubleshooting-mcp-server` (Python MCP server)
 
 Services in `compose.tmf638.yaml`:
 
@@ -124,6 +160,10 @@ Services in `compose.tmf637.yaml`:
 - `tmf637-backend` (FastAPI backend)
 - `tmf637-mcp-server` (Python MCP server)
 
+Services in `compose.wifi_calling.yaml`:
+
+- `wifi-calling-mcp-server` (Python MCP server)
+
 The backend DB is persisted in the `tmf621-data` volume at `/data/tickets.db`.
 
 Langflow MCP endpoints:
@@ -131,6 +171,8 @@ Langflow MCP endpoints:
 - TMF621: `http://localhost:8000/mcp`
 - TMF638: `http://localhost:8001/mcp`
 - TMF637: `http://localhost:8002/mcp`
+- WiFi Calling: `http://localhost:8011/mcp`
+- Troubleshooting: `http://localhost:8012/mcp`
 
 ## TMF621 endpoints (backend)
 
@@ -197,3 +239,40 @@ Supported query parameters from the spec subset:
 - `create_product`
 - `patch_product`
 - `delete_product`
+
+## WiFi Calling MCP tools
+
+- `health_check`
+- `verify_customer_in_siebel`
+- `create_ticket_in_siebel`
+- `get_router_info_axiros`
+- `apply_wifi_config_axiros`
+- `update_ticket_notes`
+- `close_ticket`
+
+## Troubleshooting MCP tools
+
+Input convention for troubleshooting tools:
+
+- Use `landline_number` as the customer identifier
+- Accepted formats include `2101111001`, `+302101111001`, and `00302101111001`
+- Lookup is normalized internally to the same landline customer
+
+- `health_check`
+- `verify_customer`
+- `aaa_get_disconnection_history`
+- `axiros_check_ont_status`
+- `axiros_check_router_status`
+- `axiros_remote_reboot_ont`
+- `axiros_remote_reboot_router`
+- `nts_check_port_status`
+- `nts_reset_port`
+- `hubs_check_cabinet_status`
+- `wcrm_check_service_status`
+- `wcrm_check_planned_maintenance`
+- `ote_check_network_status`
+- `nova_check_backhaul_status`
+- `siebel_check_existing_tickets`
+- `siebel_create_trouble_ticket`
+- `toa_check_technician_availability`
+- `toa_schedule_appointment`

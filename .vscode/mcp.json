@@ -23,4 +23,22 @@
         "-m",
         "tmf637_mcp_server.server"
       ]
+    },
+    "wifi-calling-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "-m",
+        "wifi_calling_mcp_server.server"
+      ]
+    },
+    "troubleshooting-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "-m",
+        "troubleshooting_mcp_server.server"
+      ]
     }
+  }
+}

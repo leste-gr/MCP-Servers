@@ -75,4 +75,26 @@
 				"tmf637_mcp_server.server"
 			],
 			"isBackground": true
+		},
+		{
+			"label": "Run WiFi Calling MCP Server",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"-m",
+				"wifi_calling_mcp_server.server"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Run Troubleshooting MCP Server",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"-m",
+				"troubleshooting_mcp_server.server"
+			],
+			"isBackground": true
 		}
+	]
+}

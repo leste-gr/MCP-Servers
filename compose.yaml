@@ -29,5 +29,35 @@ services:
     stdin_open: true
     tty: true
 
+  wifi-calling-mcp-server:
+    build:
+      context: .
+      dockerfile: Containerfile.mcp.wifi_calling
+    container_name: wifi-calling-mcp-server
+    environment:
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8011
+      MCP_PATH: /mcp
+    ports:
+      - "8011:8011"
+    stdin_open: true
+    tty: true
+
+  troubleshooting-mcp-server:
+    build:
+      context: .
+      dockerfile: Containerfile.mcp.troubleshooting
+    container_name: troubleshooting-mcp-server
+    environment:
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8012
+      MCP_PATH: /mcp
+    ports:
+      - "8012:8012"
+    stdin_open: true
+    tty: true
+
 volumes:
   tmf621-data:
