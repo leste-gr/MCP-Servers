@@ -47,6 +47,12 @@ def _to_int(v: Any) -> int | None:
 
 @mcp.tool()
 def health_check() -> dict[str, str]:
+    """Internal health probe for the TMF638 MCP server.
+
+    Returns server status and the configured TMF638 backend base URL.
+    This is not part of the TMF638 swagger operations; it is provided for
+    MCP runtime diagnostics.
+    """
     return {
         "status": "ok",
         "server": "tmf638-mcp-server",
@@ -60,6 +66,21 @@ def list_services(
     offset: Any = None,
     limit: Any = None,
 ) -> list[dict[str, Any]]:
+    """TMF638 listService (GET /service): List or find Service objects.
+
+    Swagger mapping:
+    - operationId: listService
+    - method/path: GET /service
+
+    Args:
+        fields: Comma-separated properties to be provided in response.
+            Accepts either a list of field names or a pre-joined string.
+        offset: Requested index for start of resources to be provided in response.
+        limit: Requested number of resources to be provided in response.
+
+    Returns:
+        A list of TMF638 Service resources.
+    """
     params = {"fields": _fields_str(fields), "offset": _to_int(offset), "limit": _to_int(limit)}
     params = {k: v for k, v in params.items() if v is not None}
     with httpx.Client(timeout=30.0) as client:
@@ -70,6 +91,20 @@ def list_services(
 
 @mcp.tool()
 def get_service(service_id: str, fields: list[str] | str | None = None) -> dict[str, Any]:
+    """TMF638 retrieveService (GET /service/{id}): Retrieve a Service by ID.
+
+    Swagger mapping:
+    - operationId: retrieveService
+    - method/path: GET /service/{id}
+
+    Args:
+        service_id: Identifier of the Resource (path parameter `id`).
+        fields: Comma-separated properties to be provided in response.
+            Accepts either a list of field names or a pre-joined string.
+
+    Returns:
+        A single TMF638 Service resource.
+    """
     f = _fields_str(fields)
     params = {"fields": f} if f else None
     with httpx.Client(timeout=30.0) as client:
@@ -87,6 +122,24 @@ def create_service(
     operating_status: Literal["pending", "configured", "starting", "running", "degraded", "failed", "limited", "stopping", "stopped", "unknown"] | None = None,
     at_type: str = "Service",
 ) -> dict[str, Any]:
+    """TMF638 createService (POST /service): Create a Service entity.
+
+    Swagger mapping:
+    - operationId: createService
+    - method/path: POST /service
+    - request body: Service_FVO
+
+    Args:
+        name: Service name.
+        description: Human-readable service description.
+        service_type: Service classification (`serviceType`).
+        state: Lifecycle state of the service.
+        operating_status: Operational status of the service.
+        at_type: TMF polymorphic type (`@type`), defaults to `Service`.
+
+    Returns:
+        The created TMF638 Service resource.
+    """
     payload = {
         "@type": at_type,
         "name": name,
@@ -114,6 +167,27 @@ def patch_service(
     operating_status: Literal["pending", "configured", "starting", "running", "degraded", "failed", "limited", "stopping", "stopped", "unknown"] | None = None,
     fields: list[str] | str | None = None,
 ) -> dict[str, Any]:
+    """TMF638 patchService (PATCH /service/{id}): Partially update a Service.
+
+    Swagger mapping:
+    - operationId: patchService
+    - method/path: PATCH /service/{id}
+    - request body: Service_MVO
+
+    Args:
+        service_id: Identifier of the Resource (path parameter `id`).
+        at_type: TMF polymorphic type override (`@type`).
+        name: Updated service name.
+        description: Updated service description.
+        service_type: Updated service classification (`serviceType`).
+        state: Updated lifecycle state.
+        operating_status: Updated operational status.
+        fields: Comma-separated properties to be provided in response.
+            Accepts either a list of field names or a pre-joined string.
+
+    Returns:
+        The updated TMF638 Service resource.
+    """
     payload = {
         "@type": at_type,
         "name": name,
@@ -134,6 +208,18 @@ def patch_service(
 
 @mcp.tool()
 def delete_service(service_id: str) -> dict[str, Any]:
+    """TMF638 deleteService (DELETE /service/{id}): Delete a Service entity.
+
+    Swagger mapping:
+    - operationId: deleteService
+    - method/path: DELETE /service/{id}
+
+    Args:
+        service_id: Identifier of the Resource (path parameter `id`).
+
+    Returns:
+        A local confirmation payload with deleted service id.
+    """
     with httpx.Client(timeout=30.0) as client:
         response = client.delete(_endpoint(f"/service/{service_id}"))
         response.raise_for_status()

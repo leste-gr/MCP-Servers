@@ -1,6 +1,6 @@
 """TMF637 Product Inventory Management FastAPI backend."""
 import uuid
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
 from tmf637_backend.models import Product, ProductCreate, ProductPatch
@@ -33,6 +33,7 @@ def _select_fields(obj: dict, fields: list[str] | None) -> dict:
 
 @app.get(f"{BASE_PATH}/product", tags=["product"])
 def list_product_endpoint(
+    request: Request,
     fields: str | list[str] | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -54,7 +55,23 @@ def list_product_endpoint(
     except (ValueError, TypeError):
         limit = 100
 
-    products, total_count = list_products(offset=offset, limit=limit, fields=fields)
+    reserved = {"fields", "offset", "limit"}
+    filters: dict[str, str] = {}
+    for key, value in request.query_params.multi_items():
+        if key in reserved:
+            continue
+        # Repeat params become comma-separated values for __in usage.
+        if key in filters:
+            filters[key] = f"{filters[key]},{value}"
+        else:
+            filters[key] = value
+
+    products, total_count = list_products(
+        offset=offset,
+        limit=limit,
+        fields=fields,
+        filters=filters or None,
+    )
     return JSONResponse(
         content=products,
         headers={"X-Total-Count": str(total_count), "X-Result-Count": str(len(products))},
